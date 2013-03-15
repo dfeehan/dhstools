@@ -10,11 +10,11 @@ Depends:
 Imports:
     plyr,
     reshape2
-License: GPL-3 
+License: GPL-3
 Collate:
     'cmc.R'
     'dhstools.r'
-    'occ-exp.R'
     'plot-mort-surface.r'
-    'read-files.R'
-    'remap-variables.R'
+    'occ-exp.r'
+    'read-files.r'
+    'remap-variables.r'
