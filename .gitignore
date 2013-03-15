@@ -1,0 +1,28 @@
+# History files
+.Rhistory
+
+.RData
+
+# taken from https://github.com/hadley/devtools/blob/master/.gitignore
+.R*
+*.so
+*.o
+*.dll
+*.Rproj
+
+# Example code in package build process
+*-Ex.R
+
+.DS_Store
+
+# backup files created by emacs
+*~
+
+# these are created as part of building vignettes
+*.log
+*.synctex.gz
+*.tex
+
+# compiled versions of vignettes
+
+

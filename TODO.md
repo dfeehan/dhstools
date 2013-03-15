@@ -1,0 +1,1 @@
+- go through and remove subset(); this should only be used interactively [see, for example, https://github.com/hadley/devtools/wiki/Evaluation]
