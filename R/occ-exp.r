@@ -344,7 +344,8 @@ compute.occ.exp <- function(formula,
 
     } else {
 
-        dimnames(occ.exp) <-    c(as.list(data.frame(covar.vals)),
+        ##dimnames(occ.exp) <-    c(as.list(data.frame(covar.vals)),
+        dimnames(occ.exp) <-    c(as.list(covar.vals),
                                   list(paste(ages),
                                        paste(interval.names),
                                        c("occ", "exp") ))
@@ -446,6 +447,8 @@ compute.occ.exp <- function(formula,
                              age1.inrange=(age1 >= min.age &
                                            age1 <= max.age))        
 
+        ## TODO -- this is giving us trouble when, for example,
+        ## age0.res ends up having 0 rows...
         age0.res <- ddply(subset(calldat, age0.inrange),
                           as.quoted(table.fml0),
                           function(df) {
@@ -453,6 +456,7 @@ compute.occ.exp <- function(formula,
                                      occ0=sum(df$event0),
                                      age=df$age0[1]))
                           })
+
         age1.res <- ddply(subset(calldat, age1.inrange),
                           as.quoted(table.fml1),
                           function(df) {
@@ -470,7 +474,7 @@ compute.occ.exp <- function(formula,
                              exp0=ifelse(is.na(exp0),0,exp0),
                              occ0=ifelse(is.na(occ0),0,occ0),
                              exp1=ifelse(is.na(exp1),0,exp1),
-                             occ1=ifelse(is.na(occ1),0,occ1),                             
+                             occ1=ifelse(is.na(occ1),0,occ1),
                              exp=exp0 + exp1,
                              occ=occ0 + occ1)
 
@@ -487,11 +491,10 @@ compute.occ.exp <- function(formula,
     }
 
     occ.exp <- acast(uberret,
-                     paste(all.vars(table.fml),
-                           "age",
-                           "time",
-                           "variable",
-                           sep="~", collapse=""))
+                     do.call("paste",
+                             c(all.vars(table.fml),
+                               list("age", "time", "variable",
+                                    sep="~",collapse=""))))
 
     names(dimnames(occ.exp)) <- c(all.vars(table.fml),
                                   "age",
