@@ -6,13 +6,184 @@
 ############################################################
 
 ############################################################
+##' make an age.groups object
+##'
+##' @param start the first age
+##' @param widths the widths of the subsequent age groups
+##' @param names the names of the age groups
+##' @return an object (list) with the widths, names, and
+##' number of age groups, as well as a matrix called
+##' template which has the start and end of each age interval.
+##' the intervals in template are close on the left but not
+##' the right; eg, exp.start of 10 and exp.end of 20
+##' means [10, 20) in terms of exact ages
+##' (this is useful later on, for making individual age
+##'  schedules based on, eg, birth dates)
+make.age.groups <- function(start, widths, names) {
+
+  lhs <- start + c(0, cumsum(widths[-length(widths)]))
+  
+  rhs <- lhs + widths 
+
+  template <- cbind(exp.start=lhs, exp.end=rhs)
+
+  if (is.null(names)) {
+    names <- paste(lhs)
+  } else if (length(names) > nrow(template)) {
+    warning("too many names specified for age groups; truncating...")    
+    names <- names[1:nrow(template)]
+  }
+
+  return(list(widths=widths,
+              names=names,
+              template=template,
+              num.groups=nrow(template)))
+}
+
+############################################################
+##' make a time.periods object
+##'
+##' @param start the start of the time of interest
+##' @param durations the durations of the subsequent time periods
+##' @param names the names of the time periods
+##' @return an object (list) with the widths, names, and
+##' number of time periods
+##' as well as a matrix called
+##' template which has the start and end of each time period.
+##' the intervals in template are closed on the left but not
+##' on the right; that is, start of 1900 and end of 1910
+##' means [1900, 1910) in terms of exact times.
+make.time.periods <- function(start, durations, names) {
+
+  lhs <- start + c(0, cumsum(durations[-length(durations)]))
+  
+  rhs <- lhs + durations  
+
+  template <- cbind(start=lhs, end=rhs)
+
+  if (is.null(names)) {
+    names <- paste(lhs)
+  } else if (length(names) > nrow(template)) {
+    warning("too many names specified for time periods; truncating...")
+    names <- names[1:nrow(template)]
+  }
+  
+  return(list(durations=durations,
+              names=names,
+              template=template,
+              num.groups=nrow(template)))  
+}
+
+############################################################
+##' make a lifeline matrix
+##'
+##' @param startobs the date that eligibility for being
+##'                 observed starts (for example, the birth date)
+##' @param endobs   the data that eligibility for being
+##'                 observed stops (including endobs itself)
+##' @param agegroups an agegroups object
+##' @return a matrix representing a lifeline with the columns
+##'         exp.start, exp.end, age.end, and exp.
+##'         the matrix's rows correspond to
+##'         age groups, and the columns have the time of the
+##'         start and end of exposure in each age group, the
+##'         time with the highest age (whether or not it was reached),
+##'         as well
+##'         as the total amount of exposure
+make.lifeline <- function(startobs,
+                          endobs,
+                          agegroups) {
+
+  ## NB: all of the entries in the lifeline are inclusive,
+  ## on the left side, ie lifeline from a to b is
+  ## [a,b) NOT (a,b) or (a,b] or (a,b).
+  
+  tl <- agegroups$template + startobs
+
+  tl.exp <- exp.in.interval(exp.start=tl[,1],
+                            exp.end=tl[,2],
+                            int.begin=-Inf,
+                            int.end=endobs)
+
+  age.end <- tl[,2]
+  
+  ## if exposure wasn't for the entire interval,
+  ## reduce the end time accordingly
+  tl[,2] <- tl[,2] - ((tl[,2]-tl[,1]) - tl.exp)
+
+  ## TODO -- should we zero-out age groups for which there is
+  ##         no exposure? not sure this is necessary, for now,
+  ##         but might want to come back to this.
+  ##return(cbind(tl, exp=tl.exp, age=agegroups$names))
+  res <- cbind(tl, age.end=age.end, exp=tl.exp)
+  colnames(res) <- c("exp.start", "exp.end", "age.end", "exposure")
+
+  return(res)
+
+}
+
+### TODO -- prelim draft of these fns looks ok. next
+###    * be sure that the [,) thing works in edge cases,
+###      develop tests, and think about what the right
+###      behavior should be for events instead of
+###      intervals
+###    * think about how to integrate these into bigger
+###      picture rewrite of compute.occ.exp; need to
+###      construct each alter's lifelines, then
+###      what steps to get aggregated counts?
+###    * remember to incorporate weights...
+##age.gps <- make.age.groups(start=0, widths=rep(5,10),
+##                           names=paste(seq(from=0, to=45, by=5)))
+
+##make.lifeline(100, 128, age.gps)
+
+############################################################
+##' compute whether or not events fell in a given interval
+##'
+##' given the boundaries of a time period and a vector
+##' of event times,
+##' this fn returns the count of events that happened
+##' within the time period. so, given a time period\cr
+##' [exp.start, exp.end)\cr
+##' and events\cr
+##' (event1, event2, ...)\cr
+##' this function returns a vector with 1's corresponding
+##' to events that took place in the time window and 0 otherwise
+##' TODO:
+##' \itemize{
+##'    \item{ add unit tests }
+##'    \item{ explain the time intervals and how they are used
+##'          (ie, improve documentation)}
+##' }
+##' Note that if there is any missingness in the
+##' exp.start or exp.end variables, then this
+##' assumes no exposure.
+##' 
+##' @param exp.start the start of the exposure window
+##' @param exp.end the end of the exposure window
+##' @param events the time of the events
+##' @return a vector of the same length of events; the entries
+##'         are 1 for each event that occurred in the given time
+##'         window and 0 otherwise
+##' @export
+events.in.interval <- function(exp.start,
+                               exp.end,
+                               events)
+{
+
+  return(as.numeric(events >= exp.start &
+                    events < exp.end))
+
+}
+
+############################################################
 ##' compute the amount of exposure in a given interval
 ##'
 ##' given the boundaries of a time period (in cmc format),
 ##' this fn returns the amount of exposure each person
 ##' contributes. so, it computes the amount of exposure
 ##' in the period\cr
-##' [exp.startobs, exp.endobs)\cr
+##' [exp.start, exp.end)\cr
 ##' that happens during\cr
 ##' [int.begin, int.end)\cr
 ##' TODO:
@@ -22,40 +193,44 @@
 ##'          (ie, improve documentation)}
 ##' }
 ##' Note that if there is any missingness in the
-##' exp.startobs or exp.endobs variables, then this
+##' exp.start or exp.end variables, then this
 ##' assumes no exposure.
 ##' 
-##' @param exp.startobs the start of the exposure window
-##' @param exp.endobs the end of the exposure window
+##' @param exp.start the start of the exposure window
+##' @param exp.end the end of the exposure window
 ##' @param int.begin the start of the time period
 ##' @param int.end the end of the time period
 ##' @return the amount of exposure in the interval
 ##' @export
-exp.in.interval <- function(exp.startobs,
-                            exp.endobs,
+exp.in.interval <- function(exp.start,
+                            exp.end,
                             int.begin,
                             int.end )
 {
 
   ## compute start (min) and end (max)
   ## of exposure in this interval
-  i.exp   <- rep(0, length(exp.startobs))
-  thismin <- rep(0, length(exp.startobs))
-  thismax <- rep(0, length(exp.startobs))
+  i.exp   <- rep(0, length(exp.start))
+  thismin <- rep(0, length(exp.start))
+  thismax <- rep(0, length(exp.start))
 
   ## respondents who started observation before the end of the interval
   ## and who ended observation after the beginning of the interval
-  ## defining this year contributed some amt of exposure to this year
-  anyexp <- (exp.startobs <= exp.endobs) &
-            (exp.startobs <= int.end) &
-            (exp.endobs >= int.begin) &
+  ## defining this time period contributed some amt of exposure
+  anyexp <- (exp.start <= exp.end) &
+            (exp.start < int.end) &
+            (exp.end > int.begin) &
             (int.begin <= int.end)
+  ##anyexp <- (exp.start <= exp.end) &
+  ##          (exp.start <= int.end) &
+  ##          (exp.end >= int.begin) &
+  ##          (int.begin <= int.end)  
 
   ## for now, if startobs / endobs not known, ignore
   anyexp[ is.na(anyexp) ] <- FALSE
 
-  thismin <- pmax( exp.startobs, int.begin )
-  thismax <- pmin( exp.endobs, int.end )
+  thismin <- pmax( exp.start, int.begin )
+  thismax <- pmin( exp.end, int.end )
 
   i.exp[ anyexp ] <- thismax[anyexp] - thismin[anyexp] 
 
@@ -115,21 +290,9 @@ exp.in.interval <- function(exp.startobs,
 ##'   ## now use compute.occ.exp to get counts of
 ##'   ## births and exposure between 1980 and 1990
 ##'   ## for ages 0 to 60
-##'   singleyr.occ.exp <- compute.occ.exp(bdate ~ 1,
-##'                                      data=bdata.coded,
-##'                                      intervals=seq(from=yr.to.cmc(1980),
-##'                                                    to=yr.to.cmc(1990+1),
-##'                                                    by=12),
-##'                                      interval.names=paste(years),
-##'                                      start.obs=bdata.coded$dob,
-##'                                      end.obs=bdata.coded$doi,
-##'                                      ## NB: for now, have to pass ages in as 
-##'                                      ## months and include one more than we
-##'                                      ## want results for
-##'                                      ages=seq(from=0,to=61*12,by=12),
-##'                                      age.names=paste(seq(from=0,to=61,by=1)),
-##'                                      unique.exp="caseid",
-##'                                      exp.scale=1/12)
+##'
+##'   ## TODO -- need to write this example using new
+##'   ##         version
 ##'
 ##'   ## WITH COVARIATES:
 ##'   ##  use compute.occ.exp to get counts of
@@ -141,372 +304,236 @@ exp.in.interval <- function(exp.startobs,
 ##'   ## (NOTE: this is just illustrative. we wouldn't recommend
 ##'   ##  substantively interpreting the results of this example.)
 ##'
-##'   gp.years <- seq(from=1970,to=2005,by=5)
-##' 
-##'    covars.occ.exp <- compute.occ.exp(bdate ~ urban + highestedlevel + religion,
-##'                                      data=bdata.coded,
-##'                                      intervals=seq(from=yr.to.cmc(gp.years[1]),
-##'                                                    to=yr.to.cmc(max(gp.years)+5),
-##'                                                    by=12*5),
-##'                                      interval.names=paste(years),
-##'                                      start.obs=bdata.coded$dob,
-##'                                      end.obs=bdata.coded$doi,
-##'                                      ## NB: for now, have to pass ages in as 
-##'                                      ## months and include one more than we
-##'                                      ## want results for
-##'                                      ages=seq(from=0,to=65*12,by=5*12),
-##'                                      age.names=paste(seq(from=0,to=65,by=5)),
-##'                                      unique.exp="caseid",
-##'                                      exp.scale=1/12)
+##'   ## TODO -- need to write this example using new
+##'   ##         version
 ##' 
 ##' @param formula a formula whose LHS is var that has the timing of events
 ##'                and whose RHS is covariatess (if any)
-##' @param intervals vector of CMC values that gives the
-##'                  time boundaries over which to compute events; for now,
-##'                  we assume that these are all of equal width. For example,
-##'                  intervals=seq(from=yr.to.cmc(years[1]),
-##'                                to=yr.to.cmc(max(years)+1),
-##'                                by=12)
-##'                  will use as time intervals the range of years in the vector called
-##'                  \code{years}. the intervals include the lower boundary, but not
-##'                  the upper one; eg, they have the form [a,b), [b,c), ...
-##'                  Note that if \code{doi} is not NULL (see below), then
-##'                  these intervals are treated as time before the interview, so that the
-##'                  actual time period is different for each row. 
+##' @param age.groups an age.groups object
+##' @param time.periods a time.periods object
 ##' @param data the dataset to use
 ##' @param doi if not NULL, the date of the interview for each row. in this case,
 ##'            the intervals are treated as years before the interview, so that the
 ##'            actual time period is potentially different for each row. (see the
 ##'            \code{intervals} argument, above)
-##' @param ages a vector with the ages. for example,
-##'             ages=seq(from=0,to=60*12,by=12) would give single years of age last
-##'             birthday in [0,60]. these intervals all have to be of equal width, and
-##'             they can't be wider than the time intervals (see \code{intervals})
 ##' @param start.obs vector of values (one per row of \code{data}) with the starting point
 ##'                  of the observation window for each row, in CMC format
 ##' @param end.obs   vector of values (one per row of \code{data}) with the ending point
 ##'                  of the observation window for each row, in CMC format
 ##' @param na.action what action to take on missing values; defaults to \code{na.pass}
-##' @param int.name the name of the variable that has the time information; defaults to 'year'
-##' @param age.name the name of the variable that has the age information; defaults to 'age'
-##' @param occ.weight the weight to apply to occurrences; defaults to 1
-##'                   (not yet implemented)
-##' @param exp.weight the weight to apply to exposures; defaults to 1
-##'                   (not yet implemented)
+##' @param weight the weight to apply to occurrences and exposures; defaults to 1
 ##' @param unique.exp tells which variable identifies unique units for computing exposure.
 ##'                   so, if the data is multiple records for units that experienced
 ##'                   multiple events, this allows us to avoid overcounting exposure
-##' @param interval.names the name so of the time intervals
-##' @param age.names the names of the ages or age intervals
 ##' @param exp.scale TODO
 ##' @return a list containing
 ##' \describe{
 ##'    \item{occ.exp}{an array of occurrences and exposures}
-##'    \item{time.intervals}{the time intervals}
-##'    \item{ages}{the ages}
+##'    \item{time.periods}{the time intervals}
+##'    \item{age.groups}{the ages}
 ##'    \item{exp.scale}{the amount by which exposure is scaled}
 ##' }
 ##' 
 ##' @export
 compute.occ.exp <- function(formula,
-                            intervals,
                             data,
                             doi=NULL,
-                            ages,
+                            age.groups,
+                            time.periods,
                             start.obs,
                             end.obs,
                             na.action=na.pass,
-                            int.name="year",
-                            age.name="age",
-                            occ.weight=1,
-                            exp.weight=1,
+                            weights=NULL,
                             unique.exp=NULL,
-                            interval.names=NULL,
-                            age.names=NULL,
                             exp.scale=1)
 {
+
+    ## TODO -- LEFT OFF HERE
+    ##   -> be sure this can still handle time frames that
+    ##      are defined as being X amt of time before interview
+    ##      (ie, time frame varies for each respondent)
+    ##   -> develop unit tests...
+    ##      be sure to test
+    ##        - weights
+    ##        - unique.exp
+    ##        - fixed time window
+    ##        - X years before interview window
+    ##   -> handling NAs?
+    ##   -> would be nice to have a feature which lets
+    ##      missingness in event variable automatically
+    ##      be treated as no event (ie replaced by -1)
+  
     ## figured this out using the
     ## code for lm(...) as a model
 
-    ### first, call model.frame on the
-    ###   formula and data we were passed in
+    ## first, call model.frame on the
+    ##   formula and data we were passed in
     mf <- match.call()
 
-    # for now, no weights or offset...
     arg.idx <- match( c("formula","data","subset","na.action"),
                       names(mf), 0L )
 
+    ## use model.frame to get a matrix with all of the covariates
     mf <- mf[c(1,arg.idx)]
     mf[[1]] <- as.name("model.frame")
     mf <- eval(mf, parent.frame())
 
-    event <- model.response(mf, "numeric")
+    mf.na <- attr(mf, "na.action")
 
-    covar.dims <- apply(mf[,-1,drop=FALSE],
-                        2,
-                        function(x) {
-                          length(unique(x))
-                        })
-
-    covar.vals <- apply(mf[,-1,drop=FALSE],
-                        2,
-                        function(x) {
-                          paste(unique(x))
-                        })
-
-    if (is.null(interval.names)) {
-        interval.names <- paste(intervals[-length(intervals)])
-    }
-
-    if (is.null(age.names)) {
-        age.names <- paste(ages)
-    }
-
-    ## check that age.names and interval.names have the right length
-    if (length(interval.names) != (length(intervals)-1)) {
-      stop("interval.names should have one fewer entry than intervals.")
-    }
-    if (length(age.names) != (length(ages))) {
-      stop("age.names should have the same length as ages.")
+    if (! is.null(mf.na)) {
+      idx.touse <- (1:nrow(data))[-as.vector(mf.na)]
+    } else {
+      idx.touse <- 1:nrow(data)
     }
     
-    ### unique.exp is a variable that tells which variable
-    ### identifies unique units for computing exposure. so, if
-    ### the data is multiple records for units that experienced
-    ### multiple events, this allows us to avoid overcounting
-    ### exposure
+    covar.names <- colnames(mf)[-1]
+    
+    ## get the weights
+    weights <- get.weights(data[idx.touse,], weights)
+    mf$.weight <- weights
+            
+    ## unique.exp is a variable that tells which variable
+    ## identifies unique units for computing exposure. so, if
+    ## the data is multiple records for units that experienced
+    ## multiple events, this allows us to avoid overcounting
+    ## exposure
     if (! is.null(unique.exp)) {
-        ## this picks (arbitrarily) one rowname for each unique
-        ## value of the variable unique.exp
-        ## eg if we have respondent id, this would only pick
-        ## one row from each respondent to avoid overcounting
-        ## exposure
-        exp.subset <- rownames(data)[! duplicated(data[,unique.exp])]
+      ## this picks (arbitrarily) one rowname for each unique
+      ## value of the variable unique.exp
+      ## eg if we have respondent id, this would only pick
+      ## one row from each respondent to avoid overcounting
+      ## exposure
+      mf$.exp.counts <- as.numeric(! duplicated(data[idx.touse,unique.exp]))
     } else {
-        ## if nothing specified, just take all of the rows
-        ## in the data passed in
-        exp.subset <- rownames(data)
+      ## if nothing specified, just take all of the rows
+      ## in the data passed in
+      mf$.exp.counts <- 1
     }
-
-    # we'll have dropped obs because of missingness on
-    # covariates;
-    # inc.rows.occ indicates which of the rows in the
-    #   original dataset (passed to this fn) should be
-    #   retained for computing occurences
-    inc.rows.occ <- rownames(data) %in% attr(mf,"row.names")
-    # inc.rows.exp indicates which of the rows retained
-    #   for computing occurences should also be used
-    #   for computing exposure. if, eg, one person has
-    #   several events recorded, using only one obs per person
-    #   would avoid overcounting exposure
-    inc.rows.exp <-  (attr(mf,"row.names") %in% exp.subset)
-
-    start.obs <- start.obs[inc.rows.occ]
-    end.obs <- end.obs[inc.rows.occ]
-
-    ### create matrices for holding the results
-    occ.exp <- array(0, c( covar.dims,
-                           length(ages),
-                           (length(intervals)-1),
-                           2))
-
-    ## recall that both time period and age intervals
-    ## are assumed to be closed on the left and open on
-    ## the right; ie, [start, end)
     
-    ## NB: the assumption here is that the
-    ##   time intervals are all of equal width
-    interval.width <- intervals[2]-intervals[1]
-
-    ## NB: the assumption here is that the age
-    ##     intervals are all of equal width
-    age.width <- ages[2]-ages[1]
-
-    ### we're assuming that the respondent turns the next age
-    ### at the start of the month of her birth
-    ### (change this to 0.5 for halfway through the month...)
-    ##b.offset <- 0.5
-    b.offset <- 0
-
-    ## note that bmo here is not literally the birth month,
-    ## unless the age intervals are of width 12 months (ie, 1 year)
-    ## otherwise, it is the month in the age interval where
-    ## the age groups switch
-    bmo <- (start.obs %% age.width) + b.offset
-
-    if(length(covar.vals)==0) {
-        dimnames(occ.exp) <-    list(paste(ages),
-                                     paste(interval.names),
-                                     c("occ", "exp") )
-        names(dimnames(occ.exp)) <- c(age.name,
-                                      int.name,
-                                      "var")
-
-    } else {
-
-        ##dimnames(occ.exp) <-    c(as.list(data.frame(covar.vals)),
-        dimnames(occ.exp) <-    c(as.list(covar.vals),
-                                  list(paste(ages),
-                                       paste(interval.names),
-                                       c("occ", "exp") ))
-        
-        names(dimnames(occ.exp)) <- c(names(covar.dims),
-                                      age.name,
-                                      int.name,
-                                      "var")
-    }
-
-    uberret <- c()
+    events <- model.response(mf, "numeric")
     
-    for( yidx in 1:(length(intervals)-1) ) {
+    ## for now, we'll use the row indices in the data as
+    ## our internal id for each row
+    mf$.internal_id <- 1:nrow(mf)
+    ids <- mf$.internal_id
+    names(ids) <- paste(ids)
 
-        cat("time interval: ", interval.names[yidx], "\n")
+    names(start.obs) <- names(ids)
+    names(end.obs) <- names(ids)
+    names(events) <- names(ids)
 
-        ## figure out how much exposure each respondent had in
-        ## time interval y
+    ## create a lifeline, describing exposure by age and time,
+    ## for each row in the dataset
+    all.ll <- llply(seq_along(start.obs),
+                    function(idx) {
+                      res <- make.lifeline(start.obs[idx],
+                                           end.obs[idx],
+                                           age.groups)
+                    })
+    names(all.ll) <- ids
 
-        ## this is the left-hand side of the time interval
-        if (is.null(doi)) {
-          y.begin <- rep(intervals[yidx], nrow(mf))
-        } else {
-          y.begin <- doi - intervals[yidx+1] 
-        }
-        
-        ## this is the right-hand side of the time interval
-        if (is.null(doi)) {
-          y.end <- rep(intervals[yidx+1], nrow(mf))          
-        } else {
-          y.end <- doi - (intervals[yidx])
-        }
+    ## this step combines the lifelines and the time periods; it produces
+    ## a list with an entry for each time period and, in each entry, another list
+    ## with a lifeline matrix for each row in the dataset. the lifeline matrix
+    ## summarizes how much exposure each row had in each age group during the
+    ## given time period
+    all.exp <- alply(time.periods$template,
+                     1,
+                     function(this.timerow) {
 
-        ## this is each row's 'birthday' in the given interval
-        ## so, this is when each row switches age groups, and not necessarily the
-        ## literal birthday (though it is the literal birthday if age.width is
-        ## 12 months, ie, 1 year)
-        min.age <- min(ages)
-        this.bday <- y.begin + (age.width - ((y.begin - start.obs) %% age.width))
+                       ## for each alter and each age, figure out how
+                       ## much exposure there was in this time period
+                       time.exp <- llply(seq_along(names(all.ll)),
+                                         function(this.ll.id) {
 
-        ## we assume that the width of the time intervals <= width of age intervals, so that
-        ## people will be two ages in the time interval
-        age0 <- (floor((y.begin-start.obs)/age.width))*age.width + min(ages)
-        age1 <- (floor((this.bday-start.obs)/age.width))*age.width + min(ages)
+                                           this.ll <- all.ll[[this.ll.id]]
 
-        ## exp.in.interval is in the dhstools package
-        age0.exp <- exp.in.interval( start.obs, end.obs,
-                                     y.begin, this.bday ) * exp.weight * exp.scale
-        age1.exp <- exp.in.interval( start.obs, end.obs,
-                                     this.bday, y.end ) * exp.weight * exp.scale
+                                           ## get exposure
+                                           res.e <- mdply(this.ll[,c("exp.start",
+                                                                   "exp.end")],
+                                                        .fun=exp.in.interval,
+                                                        int.begin=this.timerow["start"],
+                                                        int.end=this.timerow["end"])
+                                           
+                                           ## get events
+                                           ## note that we use the end of the age
+                                           ## interval and not the end of the
+                                           ## exposure interval to detect events
+                                           ## w/in age groups here. this is because
+                                           ## the fact that our exposure intervals
+                                           ## are half-open means that we'll ever
+                                           ## detect an event at d in an interval
+                                           ## from [b, d)
+                                           res.o <- events.in.interval(this.ll[,"exp.start"],
+                                                                       this.ll[,"age.end"],
+                                                                       events[this.ll.id])
+                                           res <- data.frame(.exposure=res.e$V1)
+                                           res$.occ <- res.o
+                                           res$.internal_id <- this.ll.id
+                                           res$.age <- age.groups$names
 
-        if (any(age0.exp < 0) | any(age1.exp < 0)) {
-          stop("ERROR: found negative exposure.
-                There must be a problem with the time variables.\n")
-        }
-        
-        ## figure out which rows experienced an event in
-        ## the first age group in time period (event0) and
-        ## the second age group in time period (event1)
-        ## again, recall that we're treating intervals as
-        ## closed on the left and open on the right
-        event0 <- as.numeric(event >= y.begin &
-                             event < this.bday &
-                             event < y.end) * occ.weight
-        event1 <- as.numeric(event >= y.begin &
-                             event >= this.bday &
-                             event < y.end) * occ.weight
+                                           return(res)
+                                         })
+                       return(time.exp)                                         
+                     })
+    names(all.exp) <- time.periods$names
 
-        ## NAs are not events, so replace with 0s...
-        event0[ is.na(event0) ] <- 0
-        event1[ is.na(event1) ] <- 0
+    ## this step aggregates all of the exposures during different time
+    ## periods to one big dataframe with id, time, age, and exposure
+    all.exp.agg <- ldply(names(all.exp),
+                         function(this.time) {
+                           uberdat <- do.call("rbind",
+                                              all.exp[[this.time]])
+                           uberdat$.time <- this.time
+                           return(uberdat)
+                         })
 
-        ### get the formula for computing tabs
-        table.fml <- formula
-        ### take RHS out of formula...
-        table.fml[2] <- NULL
-        ### and add a term for age and exposure
-        ##table.fml0 <- update(table.fml, ~ . + age0 + age0.exp)
-        ##table.fml1 <- update(table.fml, ~ . + age1 + age1.exp)
-        table.fml0 <- update(table.fml, ~ . + age0)
-        table.fml1 <- update(table.fml, ~ . + age1)
+    all.exp.agg <- merge(all.exp.agg,
+                         mf,
+                         by=".internal_id")
 
-        ### make the dataset we'll call xtabs on
-        calldat <- cbind(data[inc.rows.occ,], age0, age0.exp, event0, age1, age1.exp, event1)
+    all.exp.agg <- all.exp.agg[,c(covar.names,
+                                  ".time", ".age",
+                                  ".exposure", ".occ",
+                                  ".weight", ".exp.counts")]
 
-        ### and only use those observations we've marked as
-        ### relevant for exposure (which could be different from
-        ### the ones used to compute occurences)
-        calldat.exp <- calldat[inc.rows.exp,]
+    ## apply all of the weights:
+    ##  - weights
+    ##  - whether or not exposure should count
+    ##    (to avoid counting dups, see unique.exp)
+    ##  - exp.scale for scaling exposure
+    ##    (eg mult by 1/12 to convert months to years of exposure)
+    all.exp.agg <- transform(all.exp.agg,
+                             .exposure = .exposure * .exp.counts * .weight * exp.scale,
+                             .occ = .occ * .weight)
 
-        ## when we tally things up, only people w/ positive age will
-        ## have the potential to be exposed or have an event occur
-        min.age <- min(ages)
-        max.age <- max(ages)
+    ## now we can get rid of the weighting vars...
+    all.exp.agg <- all.exp.agg[,-match(c(".exp.counts", ".weight", ".exp.scale"),
+                                       colnames(all.exp.agg),
+                                       0L)]
+    
+    all.exp.melted <- melt(all.exp.agg,
+                           id.vars=c(covar.names,
+                                     ".time", ".age"))
 
-        calldat <- transform(calldat,
-                             age0.inrange=(age0 >= min.age &
-                                           age0 <= max.age),                             
-                             age1.inrange=(age1 >= min.age &
-                                           age1 <= max.age))        
+    occ.exp.array <- acast(all.exp.melted,
+                           as.list(c(covar.names,
+                                     ".time", ".age",
+                                     "variable")),
+                           fun.aggregate=sum,
+                           na.rm=TRUE)
+    
+    ## name the dimensions...
+    ## (be sure to handle the case where there are
+    ##  no covariates)
+    names(dimnames(occ.exp.array)) <- c(covar.names,
+                                        "time", "age", "variable")
 
-        ## TODO -- this is giving us trouble when, for example,
-        ## age0.res ends up having 0 rows...
-        age0.res <- ddply(subset(calldat, age0.inrange),
-                          as.quoted(table.fml0),
-                          function(df) {
-                            return(c(exp0=sum(df$age0.exp),
-                                     occ0=sum(df$event0),
-                                     age=df$age0[1]))
-                          })
-
-        age1.res <- ddply(subset(calldat, age1.inrange),
-                          as.quoted(table.fml1),
-                          function(df) {
-                            return(c(exp1=sum(df$age1.exp),
-                                     occ1=sum(df$event1),
-                                     age=df$age1[1]))
-                          })
-
-        tot.res <- merge(age0.res,
-                         age1.res,
-                         by=c(all.vars(table.fml), "age"),
-                         all=TRUE)
-
-        tot.res <- transform(tot.res,
-                             exp0=ifelse(is.na(exp0),0,exp0),
-                             occ0=ifelse(is.na(occ0),0,occ0),
-                             exp1=ifelse(is.na(exp1),0,exp1),
-                             occ1=ifelse(is.na(occ1),0,occ1),
-                             exp=exp0 + exp1,
-                             occ=occ0 + occ1)
-
-        tmp <- tot.res[,c(all.vars(table.fml),"age","occ","exp")]
-
-        tmp$time <- interval.names[yidx]
-        
-        tmp2 <- melt(tmp,
-                     measure.vars=c("occ","exp"))
-
-        uberret <- rbind(uberret,
-                         tmp2)
-  
-    }
-
-    occ.exp <- acast(uberret,
-                     do.call("paste",
-                             c(all.vars(table.fml),
-                               list("age", "time", "variable",
-                                    sep="~",collapse=""))))
-
-    names(dimnames(occ.exp)) <- c(all.vars(table.fml),
-                                  "age",
-                                  "time",
-                                  "variable")
-
-    ## convert to desired age names
-    dimnames(occ.exp)$age <- age.names
-
-    return( list(occ.exp=occ.exp,
-                 time.intervals=intervals,
-                 ages=ages,
-                 exp.scale=exp.scale) )
+    return( list(occ.exp=occ.exp.array,
+                 time.periods=time.periods,
+                 age.groups=age.groups,
+                 exp.scale=exp.scale,
+                 counted.in.exp=mf$.exp.counts,
+                 na.action=mf.na) )
 
 }
