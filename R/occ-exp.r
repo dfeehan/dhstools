@@ -8,6 +8,9 @@
 ############################################################
 ##' make an age.groups object
 ##'
+##' TODO -- would be nice if this could take either widths
+##' or bins / breaks
+##' 
 ##' @param start the first age
 ##' @param widths the widths of the subsequent age groups
 ##' @param names the names of the age groups
@@ -511,14 +514,22 @@ compute.occ.exp <- function(formula,
     all.exp.agg <- all.exp.agg[,-match(c(".exp.counts", ".weight", ".exp.scale"),
                                        colnames(all.exp.agg),
                                        0L)]
+
+    ## rename vars to occ, exp, time, age, etc...
+    ## so the results have nicer names when they are returned
+    all.exp.agg <- rename(all.exp.agg,
+                          c(".time"="time",
+                            ".age"="age",
+                            ".exposure"="exp",
+                            ".occ"="occ"))
     
     all.exp.melted <- melt(all.exp.agg,
                            id.vars=c(covar.names,
-                                     ".time", ".age"))
+                                     "time", "age"))
 
     occ.exp.array <- acast(all.exp.melted,
                            as.list(c(covar.names,
-                                     ".time", ".age",
+                                     "time", "age",
                                      "variable")),
                            fun.aggregate=sum,
                            na.rm=TRUE)

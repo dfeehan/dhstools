@@ -18,3 +18,5 @@ Collate:
     'occ-exp.r'
     'read-files.r'
     'remap-variables.r'
+    'helper-functions.r'
+    'occ-exp-backup.r'

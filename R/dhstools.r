@@ -6,7 +6,7 @@
 ##' @docType package
 ##' @name dhstools
 ##' @aliases dhstools package-dhstools
-##' @import plyr reshape2 grDevices
+##' @import plyr reshape2 grDevices functional
 NULL
 
 

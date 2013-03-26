@@ -2,28 +2,17 @@
 \alias{compute.occ.exp}
 \title{tablulate occurrences and exposures}
 \usage{
-  compute.occ.exp(formula, intervals, data, doi = NULL,
-    ages, start.obs, end.obs, na.action = na.pass,
-    int.name = "year", age.name = "age", occ.weight = 1,
-    exp.weight = 1, unique.exp = NULL,
-    interval.names = NULL, age.names = NULL, exp.scale = 1)
+  compute.occ.exp(formula, data, doi = NULL, age.groups,
+    time.periods, start.obs, end.obs, na.action = na.pass,
+    weights = NULL, unique.exp = NULL, exp.scale = 1)
 }
 \arguments{
   \item{formula}{a formula whose LHS is var that has the
   timing of events and whose RHS is covariatess (if any)}
 
-  \item{intervals}{vector of CMC values that gives the time
-  boundaries over which to compute events; for now, we
-  assume that these are all of equal width. For example,
-  intervals=seq(from=yr.to.cmc(years[1]),
-  to=yr.to.cmc(max(years)+1), by=12) will use as time
-  intervals the range of years in the vector called
-  \code{years}. the intervals include the lower boundary,
-  but not the upper one; eg, they have the form [a,b),
-  [b,c), ...  Note that if \code{doi} is not NULL (see
-  below), then these intervals are treated as time before
-  the interview, so that the actual time period is
-  different for each row.}
+  \item{age.groups}{an age.groups object}
+
+  \item{time.periods}{a time.periods object}
 
   \item{data}{the dataset to use}
 
@@ -32,12 +21,6 @@
   years before the interview, so that the actual time
   period is potentially different for each row. (see the
   \code{intervals} argument, above)}
-
-  \item{ages}{a vector with the ages. for example,
-  ages=seq(from=0,to=60*12,by=12) would give single years
-  of age last birthday in [0,60]. these intervals all have
-  to be of equal width, and they can't be wider than the
-  time intervals (see \code{intervals})}
 
   \item{start.obs}{vector of values (one per row of
   \code{data}) with the starting point of the observation
@@ -50,34 +33,22 @@
   \item{na.action}{what action to take on missing values;
   defaults to \code{na.pass}}
 
-  \item{int.name}{the name of the variable that has the
-  time information; defaults to 'year'}
-
-  \item{age.name}{the name of the variable that has the age
-  information; defaults to 'age'}
-
-  \item{occ.weight}{the weight to apply to occurrences;
-  defaults to 1 (not yet implemented)}
-
-  \item{exp.weight}{the weight to apply to exposures;
-  defaults to 1 (not yet implemented)}
+  \item{weight}{the weight to apply to occurrences and
+  exposures; defaults to 1}
 
   \item{unique.exp}{tells which variable identifies unique
   units for computing exposure.  so, if the data is
   multiple records for units that experienced multiple
   events, this allows us to avoid overcounting exposure}
 
-  \item{interval.names}{the name so of the time intervals}
-
-  \item{age.names}{the names of the ages or age intervals}
-
   \item{exp.scale}{TODO}
 }
 \value{
   a list containing \describe{ \item{occ.exp}{an array of
-  occurrences and exposures} \item{time.intervals}{the time
-  intervals} \item{ages}{the ages} \item{exp.scale}{the
-  amount by which exposure is scaled} }
+  occurrences and exposures} \item{time.periods}{the time
+  intervals} \item{age.groups}{the ages}
+  \item{exp.scale}{the amount by which exposure is scaled}
+  }
 }
 \description{
   Given a variable indicating when an event happened, a
@@ -125,21 +96,9 @@
   ## now use compute.occ.exp to get counts of
   ## births and exposure between 1980 and 1990
   ## for ages 0 to 60
-  singleyr.occ.exp <- compute.occ.exp(bdate ~ 1,
-                                     data=bdata.coded,
-                                     intervals=seq(from=yr.to.cmc(1980),
-                                                   to=yr.to.cmc(1990+1),
-                                                   by=12),
-                                     interval.names=paste(years),
-                                     start.obs=bdata.coded$dob,
-                                     end.obs=bdata.coded$doi,
-                                     ## NB: for now, have to pass ages in as
-                                     ## months and include one more than we
-                                     ## want results for
-                                     ages=seq(from=0,to=61*12,by=12),
-                                     age.names=paste(seq(from=0,to=61,by=1)),
-                                     unique.exp="caseid",
-                                     exp.scale=1/12)
+
+  ## TODO -- need to write this example using new
+  ##         version
 
   ## WITH COVARIATES:
   ##  use compute.occ.exp to get counts of
@@ -151,22 +110,7 @@
   ## (NOTE: this is just illustrative. we wouldn't recommend
   ##  substantively interpreting the results of this example.)
 
-  gp.years <- seq(from=1970,to=2005,by=5)
-
-   covars.occ.exp <- compute.occ.exp(bdate ~ urban + highestedlevel + religion,
-                                     data=bdata.coded,
-                                     intervals=seq(from=yr.to.cmc(gp.years[1]),
-                                                   to=yr.to.cmc(max(gp.years)+5),
-                                                   by=12*5),
-                                     interval.names=paste(years),
-                                     start.obs=bdata.coded$dob,
-                                     end.obs=bdata.coded$doi,
-                                     ## NB: for now, have to pass ages in as
-                                     ## months and include one more than we
-                                     ## want results for
-                                     ages=seq(from=0,to=65*12,by=5*12),
-                                     age.names=paste(seq(from=0,to=65,by=5)),
-                                     unique.exp="caseid",
-                                     exp.scale=1/12)
+  ## TODO -- need to write this example using new
+  ##         version
 }
 
