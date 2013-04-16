@@ -6,6 +6,30 @@
 ## 
 ############################################################
 
+#########################################################
+##' using a recode matrix (called a varmap), which has columns
+##' 'code' and 'value' (and perhaps others),
+##' rename a variable. this is a convenient wrapper around
+##' the \code{car::recode} function
+##'
+##' @param x the variable to recode
+##' @param varmap a data.frame describing the recodes, which has
+##'               columns called 'code' and 'value'
+##' @param as.factor.result if TRUE, turn the result into a factor
+##' @param ... additional arguments to pass to car::recode
+##' @return the recoded variable
+##' @export
+recode.varmap <- function(x, varmap, as.factor.result=TRUE, ...) {
+
+  ## NB: currently, we're relying on car::recode for this
+  rstr <- paste("'", varmap$code, "'='", varmap$value, "'", sep="",collapse=";")
+
+  res <- recode(x, rstr, as.factor.result=as.factor.result,
+                ...)
+
+  return(res)
+}
+
 ###################################################
 ##' quick & dirty fn for renaming variable names...
 ##'
