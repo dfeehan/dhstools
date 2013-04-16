@@ -259,8 +259,7 @@ exp.in.interval <- function(exp.start,
 ##' groups have to have another width.)
 ##' 
 ##' 
-##'
-##' \section{TODO}
+##' TODO
 ##' \itemize{
 ##'    \item what if event date is missing?
 ##'    \item what about things that vary with the event, eg mother's
@@ -325,7 +324,7 @@ exp.in.interval <- function(exp.start,
 ##' @param end.obs   vector of values (one per row of \code{data}) with the ending point
 ##'                  of the observation window for each row, in CMC format
 ##' @param na.action what action to take on missing values; defaults to \code{na.pass}
-##' @param weight the weight to apply to occurrences and exposures; defaults to 1
+##' @param weights the weight to apply to occurrences and exposures; defaults to 1
 ##' @param unique.exp tells which variable identifies unique units for computing exposure.
 ##'                   so, if the data is multiple records for units that experienced
 ##'                   multiple events, this allows us to avoid overcounting exposure

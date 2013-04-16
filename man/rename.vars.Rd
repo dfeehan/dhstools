@@ -18,7 +18,6 @@
 }
 \description{
   it may make sense to take this out and just use the
-  \code{\link{plyr::rename}} function from the \textt{plyr}
-  package
+  \code{plyr::rename} function from the \code{plyr} package
 }
 

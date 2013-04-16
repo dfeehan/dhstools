@@ -40,7 +40,7 @@
   \item{na.action}{what action to take on missing values;
   defaults to \code{na.pass}}
 
-  \item{weight}{the weight to apply to occurrences and
+  \item{weights}{the weight to apply to occurrences and
   exposures; defaults to 1}
 
   \item{unique.exp}{tells which variable identifies unique
@@ -72,16 +72,13 @@
   the time groups have to have another width.)
 }
 \details{
-
-
-  \section{TODO} \itemize{ \item what if event date is
-  missing?  \item what about things that vary with the
-  event, eg mother's age when child was born?  \item
-  sometimes, the order of the indices in the array isn't
-  logical; eg, for a variable with levels {1,2,3,6,9}, the
-  results might be ordered (2,1,6,3,9).  \item make this
-  capable of handling different dates than just CMC
-  codes... }
+  TODO \itemize{ \item what if event date is missing?
+  \item what about things that vary with the event, eg
+  mother's age when child was born?  \item sometimes, the
+  order of the indices in the array isn't logical; eg, for
+  a variable with levels {1,2,3,6,9}, the results might be
+  ordered (2,1,6,3,9).  \item make this capable of handling
+  different dates than just CMC codes... }
 }
 \examples{
 ## RECODE so that observations w/ no births show up
