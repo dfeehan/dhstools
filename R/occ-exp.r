@@ -314,6 +314,7 @@ exp.in.interval <- function(exp.start,
 ##'                and whose RHS is covariatess (if any)
 ##' @param age.groups an age.groups object
 ##' @param time.periods a time.periods object
+##' @param time.offsets if not NULL, then the time.periods are to be interpreted relative to these times (one for each row). useful for computing quantities like "X months before interview", where interview happened at different times for different respondents
 ##' @param data the dataset to use
 ##' @param doi if not NULL, the date of the interview for each row. in this case,
 ##'            the intervals are treated as years before the interview, so that the
@@ -343,6 +344,7 @@ compute.occ.exp <- function(formula,
                             doi=NULL,
                             age.groups,
                             time.periods,
+                            time.offsets=NA,
                             start.obs,
                             end.obs,
                             na.action=na.pass,
@@ -425,6 +427,16 @@ compute.occ.exp <- function(formula,
     names(end.obs) <- names(ids)
     names(events) <- names(ids)
 
+    ## if time offsets were not given, then take them to be 0
+    ## for each obs
+    if (is.null(time.offsets)) {
+      time.offsets <- rep(0, nrow(mf))
+    } else if (length(time.offsets) != nrow(mf)) {
+      stop("the time offsets vector does not appear to be the right length.")
+    }
+
+    names(time.offsets) <- names(ids)
+      
     ## create a lifeline, describing exposure by age and time,
     ## for each row in the dataset
     all.ll <- llply(seq_along(start.obs),
@@ -451,13 +463,17 @@ compute.occ.exp <- function(formula,
 
                                            this.ll <- all.ll[[this.ll.id]]
 
+                                           this.to <- time.offsets[this.ll.id]
+                                           
                                            ## get exposure
                                            res.e <- mdply(this.ll[,c("exp.start",
                                                                    "exp.end")],
                                                         .fun=exp.in.interval,
-                                                        int.begin=this.timerow["start"],
-                                                        int.end=this.timerow["end"])
-                                           
+                                                        int.begin=this.to +
+                                                              this.timerow["start"],
+                                                        int.end=this.to +
+                                                          this.timerow["end"])
+
                                            ## get events
                                            ## note that we use the end of the age
                                            ## interval and not the end of the
@@ -470,8 +486,14 @@ compute.occ.exp <- function(formula,
                                            res.o <- events.in.interval(this.ll[,"exp.start"],
                                                                        this.ll[,"age.end"],
                                                                        events[this.ll.id])
+                                           
                                            res <- data.frame(.exposure=res.e$V1)
-                                           res$.occ <- res.o
+
+                                           ## need a nonzero amount of exposure
+                                           ## in order to count a death...
+                                           anyexp <- as.numeric(res$.exposure > 0)
+                                           res$.occ <- res.o * anyexp
+                                           
                                            res$.internal_id <- this.ll.id
                                            res$.age <- age.groups$names
 
@@ -500,6 +522,8 @@ compute.occ.exp <- function(formula,
                                   ".exposure", ".occ",
                                   ".weight", ".exp.counts")]
 
+    ##browser()
+    
     ## apply all of the weights:
     ##  - weights
     ##  - whether or not exposure should count

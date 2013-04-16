@@ -3,8 +3,9 @@
 \title{tablulate occurrences and exposures}
 \usage{
   compute.occ.exp(formula, data, doi = NULL, age.groups,
-    time.periods, start.obs, end.obs, na.action = na.pass,
-    weights = NULL, unique.exp = NULL, exp.scale = 1)
+    time.periods, time.offsets = NA, start.obs, end.obs,
+    na.action = na.pass, weights = NULL, unique.exp = NULL,
+    exp.scale = 1)
 }
 \arguments{
   \item{formula}{a formula whose LHS is var that has the
@@ -13,6 +14,12 @@
   \item{age.groups}{an age.groups object}
 
   \item{time.periods}{a time.periods object}
+
+  \item{time.offsets}{if not NULL, then the time.periods
+  are to be interpreted relative to these times (one for
+  each row). useful for computing quantities like "X months
+  before interview", where interview happened at different
+  times for different respondents}
 
   \item{data}{the dataset to use}
 
