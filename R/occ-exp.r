@@ -428,7 +428,7 @@ compute.occ.exp <- function(formula,
 
     ## if time offsets were not given, then take them to be 0
     ## for each obs
-    if (is.null(time.offsets)) {
+    if (is.na(time.offsets)) {
       time.offsets <- rep(0, nrow(mf))
     } else if (length(time.offsets) != nrow(mf)) {
       stop("the time offsets vector does not appear to be the right length.")
