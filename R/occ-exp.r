@@ -22,6 +22,7 @@
 ##' means [10, 20) in terms of exact ages
 ##' (this is useful later on, for making individual age
 ##'  schedules based on, eg, birth dates)
+##' @export
 make.age.groups <- function(start, widths, names) {
 
   lhs <- start + c(0, cumsum(widths[-length(widths)]))
@@ -56,6 +57,7 @@ make.age.groups <- function(start, widths, names) {
 ##' the intervals in template are closed on the left but not
 ##' on the right; that is, start of 1900 and end of 1910
 ##' means [1900, 1910) in terms of exact times.
+##' @export
 make.time.periods <- function(start, durations, names) {
 
   lhs <- start + c(0, cumsum(durations[-length(durations)]))
