@@ -11,7 +11,7 @@ Imports:
     plyr,
     reshape2,
     functional
-License: GPL-3
+License: MIT
 Collate:
     'cmc.R'
     'dhstools.r'
