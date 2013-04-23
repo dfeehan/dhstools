@@ -22,7 +22,7 @@
 recode.varmap <- function(x, varmap, as.factor.result=TRUE, ...) {
 
   ## NB: currently, we're relying on car::recode for this
-  rstr <- paste("'", varmap$code, "'='", varmap$value, "'", sep="",collapse=";")
+  rstr <- paste("'", varmap$code, "'='", varmap$value, "'", sep="", collapse=";")
 
   res <- recode(x, rstr, as.factor.result=as.factor.result,
                 ...)
@@ -45,6 +45,12 @@ recode.varmap <- function(x, varmap, as.factor.result=TRUE, ...) {
 ##' @return a vector with \code{vnames} renamed according to
 ##'         the mapping from \code{fromvars} to \code{tovars}
 ##' @export
+##' @seealso \code{\link[plyr]{rename}}
+##' @examples \dontrun{
+##'    colnames(my.data) <- rename.vars(colnames(my.data),
+##'                                     c("old_var1", "old_var2"),
+##'                                     c("new_var1", "new_var2"))
+##' }
 ##################################################
 rename.vars <- function( vnames, fromvars, tovars ) {
 

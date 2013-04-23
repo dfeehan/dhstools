@@ -20,4 +20,14 @@
   it may make sense to take this out and just use the
   \code{plyr::rename} function from the \code{plyr} package
 }
+\examples{
+\dontrun{
+   colnames(my.data) <- rename.vars(colnames(my.data),
+                                    c("old_var1", "old_var2"),
+                                    c("new_var1", "new_var2"))
+}
+}
+\seealso{
+  \code{\link[plyr]{rename}}
+}
 
