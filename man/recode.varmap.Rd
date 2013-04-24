@@ -1,0 +1,30 @@
+\name{recode.varmap}
+\alias{recode.varmap}
+\title{using a recode matrix (called a varmap), which has columns
+'code' and 'value' (and perhaps others),
+rename a variable. this is a convenient wrapper around
+the \code{car::recode} function}
+\usage{
+  recode.varmap(x, varmap, as.factor.result = TRUE, ...)
+}
+\arguments{
+  \item{x}{the variable to recode}
+
+  \item{varmap}{a data.frame describing the recodes, which
+  has columns called 'code' and 'value'}
+
+  \item{as.factor.result}{if TRUE, turn the result into a
+  factor}
+
+  \item{...}{additional arguments to pass to car::recode}
+}
+\value{
+  the recoded variable
+}
+\description{
+  using a recode matrix (called a varmap), which has
+  columns 'code' and 'value' (and perhaps others), rename a
+  variable. this is a convenient wrapper around the
+  \code{car::recode} function
+}
+
