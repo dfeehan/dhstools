@@ -19,6 +19,9 @@
 ##' @param ... additional arguments to pass to car::recode
 ##' @return the recoded variable
 ##' @export
+##' @examples \dontrun{
+##'   ## TODO -- write example
+##' }
 recode.varmap <- function(x, varmap, as.factor.result=TRUE, ...) {
 
   ## NB: currently, we're relying on car::recode for this
@@ -87,6 +90,9 @@ rename.vars <- function( vnames, fromvars, tovars ) {
 ##'            \item{orig}{the original variable that was passed in}
 ##'         }
 ##' @export
+##' @examples \dontrun{
+##'    ## TODO add examples
+##' }
 remap.contig <- function(x) {
     newx <- rep(NA, length(x))
     uniq.x <- paste(unique(x))
@@ -118,6 +124,9 @@ remap.contig <- function(x) {
 ##'            \item{\code{orig}}{the original variable that was passed in}
 ##'         }
 ##' @export
+##' @examples \dontrun{
+##'   ## TODO add examples
+##' }
 same.remap <- function(x, mapping,
                        new.to.na=FALSE) {
 
@@ -164,6 +173,9 @@ same.remap <- function(x, mapping,
 ##' @param fac1 the first factor
 ##' @param fac2 the second factor
 ##' @export
+##' @examples \dontrun {
+##'    ## TODO add examples
+##' }
 harmonize.levels <- function(fac1, fac2) {
 
   if (length(levels(fac1)) > length(levels(fac2))) {
