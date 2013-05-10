@@ -5,8 +5,6 @@
 ## which are used for reporting lots of dates in
 ## DHS surveys
 ##
-## 
-############################################################
 
 ############################################################
 ##' decode a cmc value to a year and month

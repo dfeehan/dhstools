@@ -204,6 +204,8 @@ attributes.to.long <- function(data,
 
   ## ensure that the ids are all in the same order, so that
   ## we can just cbind the data.frames from each attribute together
+  ## TODO -- should add option to perform this check, even though
+  ##         it is costly...
   if(1==0) {
   check <- laply(adata,
                  function(x) {
@@ -224,7 +226,7 @@ attributes.to.long <- function(data,
     ## (this should never happen)
     stop("alignment error in reassembling long-form attribute dataset.\n")
   }
-}
+  }
 
   ## get the alter.id values (they will be in the same order
   ## for all of the datasets)
