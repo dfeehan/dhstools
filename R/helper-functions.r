@@ -1,7 +1,8 @@
 ##########################################################################
 ##' helper fns for dhstools
 ##'
-##' (get.var and get.weights are taken from the networksampling package)
+##' (NB: get.var and get.weights are taken from the
+##'      networkreporting package)
 ##'
 
 
@@ -22,6 +23,7 @@
 ##' @return a vector of values whose length is the same as the
 ##'         number of rows in survey.data; if var is NULL, this has
 ##'         the default values
+##' @keywords internal
 get.var <- function(survey.data, var, default=NA) {
 
   ## weights will default to 1 for everyone, unless the user specified
@@ -69,4 +71,5 @@ get.var <- function(survey.data, var, default=NA) {
 ##' this is the same as get.var with the default value set to 1
 ##' instead of NA
 ##' @param ... (this is a function curried from \code{get.var})
+##' @keywords internal
 get.weights <- Curry(get.var, default=1)
