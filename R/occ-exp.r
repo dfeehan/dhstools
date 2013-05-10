@@ -95,6 +95,7 @@ make.time.periods <- function(start, durations, names) {
 ##'         time with the highest age (whether or not it was reached),
 ##'         as well
 ##'         as the total amount of exposure
+##' @export
 make.lifeline <- function(startobs,
                           endobs,
                           agegroups) {
