@@ -27,4 +27,9 @@ to a different factor}
   apply the same re-mapping that was used for one factor to
   a different factor
 }
+\examples{
+\dontrun{
+  ## TODO add examples
+}
+}
 

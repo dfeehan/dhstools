@@ -19,8 +19,8 @@
   default values
 }
 \description{
-  (get.var and get.weights are taken from the
-  networksampling package)
+  (NB: get.var and get.weights are taken from the
+  networkreporting package)
 }
 \details{
   get a variable from a dataframe or vector
@@ -33,4 +33,5 @@
   special case of getting weights, look at the curried fn
   get.weights (right below)
 }
+\keyword{internal}
 

@@ -27,4 +27,9 @@ the \code{car::recode} function}
   variable. this is a convenient wrapper around the
   \code{car::recode} function
 }
+\examples{
+\dontrun{
+  ## TODO -- write example
+}
+}
 

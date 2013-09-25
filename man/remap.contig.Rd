@@ -25,4 +25,9 @@ contiguous numerical values.}
   useful in preparing categorical variables for use with
   JAGS or Stan.
 }
+\examples{
+\dontrun{
+   ## TODO add examples
+}
+}
 

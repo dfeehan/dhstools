@@ -22,4 +22,9 @@
   \code{c("old", "young", "old")} whose levels are
   \code{c("infant", "young", "old")}
 }
+\examples{
+\dontrun {
+   ## TODO add examples
+}
+}
 

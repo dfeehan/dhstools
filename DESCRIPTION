@@ -13,10 +13,10 @@ Imports:
     functional
 License: MIT
 Collate:
-    'cmc.R'
     'dhstools.r'
-    'plot-mort-surface.r'
     'occ-exp.r'
     'read-files.r'
     'remap-variables.r'
     'helper-functions.r'
+    'attributes_to_long.r'
+    'cmc.r'
