@@ -23,7 +23,7 @@
   \code{c("infant", "young", "old")}
 }
 \examples{
-\dontrun {
+\dontrun{
    ## TODO add examples
 }
 }

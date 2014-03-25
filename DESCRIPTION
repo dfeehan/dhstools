@@ -19,4 +19,4 @@ Collate:
     'remap-variables.r'
     'helper-functions.r'
     'attributes_to_long.r'
-    'cmc.r'
+    'cmc.R'

@@ -173,7 +173,7 @@ same.remap <- function(x, mapping,
 ##' @param fac1 the first factor
 ##' @param fac2 the second factor
 ##' @export
-##' @examples \dontrun {
+##' @examples \dontrun{
 ##'    ## TODO add examples
 ##' }
 harmonize.levels <- function(fac1, fac2) {
