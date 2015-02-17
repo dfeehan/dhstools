@@ -2,15 +2,18 @@ Package: dhstools
 Title: Tools for analyzing Demographic and Health Surveys (DHS)
 Description: dhstools is a set of methods useful for analyzing DHS data.
 URL: http://www.princeton.edu/~dfeehan
-Version: 0.0.1
+Version: 0.0.2
 Maintainer: Dennis Feehan <dfeehan@princeton.edu>
 Author: Dennis Feehan <dfeehan@princeton.edu>
 Depends:
     R (>= 2.11.0)
+    Rcpp (>= 0.11.4)
 Imports:
     plyr,
     reshape2,
-    functional
+    functional,
+    Rcpp
+LinkingTo: Rcpp
 License: MIT
 Collate:
     'dhstools.r'
