@@ -6,8 +6,8 @@ Version: 0.0.2
 Maintainer: Dennis Feehan <dfeehan@princeton.edu>
 Author: Dennis Feehan <dfeehan@princeton.edu>
 Depends:
-    R (>= 2.11.0)
-    Rcpp (>= 0.11.4)
+    R (>= 2.11.0),
+    Rcpp (>= 0.11.3)
 Imports:
     plyr,
     reshape2,
