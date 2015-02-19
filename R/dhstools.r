@@ -8,5 +8,5 @@
 ##' @aliases dhstools package-dhstools
 ##' @import plyr dplyr tidyr grDevices functional stringr
 ##' @useDynLib dhstools
-##' @importFrom Rcpp sourceCpp
+##' @importFrom Rcpp sourceCpp 
 NULL
