@@ -210,18 +210,18 @@ make.time.periods <- function(start, durations, names) {
 ##' @return a data frame with the covariates, age groups, occurences and expsoures
 ##' 
 ##' @export
-compute.occ.exp <- function(data,
-                            start.obs,
-                            end.obs,
-                            event,
-                            age.groups,
-                            time.periods,
-                            id.var=NULL,
-                            covars=NULL,
-                            age.offsets=NULL,
-                            time.offsets=NULL,
-                            weights=NULL,
-                            exp.scale=1)
+occ.exp <- function(data,
+                    start.obs,
+                    end.obs,
+                    event,
+                    age.groups,
+                    time.periods,
+                    id.var=NULL,
+                    covars=NULL,
+                    age.offsets=NULL,
+                    time.offsets=NULL,
+                    weights=NULL,
+                    exp.scale=1)
 {
 
 
@@ -323,7 +323,7 @@ compute.occ.exp <- function(data,
 
     agg.res$agegroup <- paste(agg.res$agegroup)
 
-    agg.res <- left_join(agg.res, agename.remap)
+    agg.res <- left_join(agg.res, agename.remap, by='agegroup')
 
     ## rescale the exposure (for example, if our time units are months,
     ## as with DHS CMC codes, we'd want to scale by 1/12 to be able to
