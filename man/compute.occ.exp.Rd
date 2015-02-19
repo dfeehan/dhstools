@@ -60,6 +60,7 @@ TODO
 \itemize{
    \item write unit tests
    \item fill an example in the documentation below
+   \item at start of code, handle defaults more elegantly
    \item id.var is not implemented; might be better to directly handle
          multiple events (see below)
    \item handle multiple time periods
