@@ -6,7 +6,7 @@
 ##' @docType package
 ##' @name dhstools
 ##' @aliases dhstools package-dhstools
-##' @import plyr reshape2 grDevices functional stringr
+##' @import plyr dplyr tidyr grDevices functional stringr
 ##' @useDynLib dhstools
 ##' @importFrom Rcpp sourceCpp
 NULL
