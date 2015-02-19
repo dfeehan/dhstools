@@ -1,5 +1,6 @@
 code
 ----
+* improve attributes.to.long; it could be a lot faster
 * go through and remove subset(); this should only be used interactively [see, for example, https://github.com/hadley/devtools/wiki/Evaluation]
 * see TODO in docs for compute.occ.exp function
 * add unit tests
