@@ -9,7 +9,7 @@
   time.offsets = NULL, weights = NULL, exp.scale = 1)
 }
 \arguments{
-\item{data}{the dataset to use}
+\item{data}{the dataset containing events}
 
 \item{start.obs}{vector of values (one per row of \code{data}) with the starting point
 of the observation window for each row, in CMC format}
@@ -17,38 +17,34 @@ of the observation window for each row, in CMC format}
 \item{end.obs}{vector of values (one per row of \code{data}) with the ending point
 of the observation window for each row, in CMC format}
 
+\item{event}{the column of the dataset that indicates the date of an event. observations
+that contribute exposure but no events should have this set to a value that
+will never occur in the time period; for example, -1}
+
 \item{age.groups}{an age.groups object}
 
 \item{time.periods}{a time.periods object}
 
-\item{time.offsets}{if not NULL, then the time.periods are to be interpreted relative to these times (one for each row). useful for computing quantities like "X months before interview", where interview happened at different times for different respondents}
+\item{id.var}{the variable giving the unique rows of the dataset for each
+individual (UNDER DEVELOPMENT)}
+
+\item{covars}{the name of covariates over which occurrences and exposures should be
+aggregated; defaults to NULL, meaning totals are computed over the entire dataset}
+
+\item{age.offsets}{if not NULL, then the age.periods are to be interpreted relative to ##'        these times (one for each row). this is usually a birth date}
+
+\item{time.offsets}{if not NULL, then the time.periods are to be interpreted relative to ##'        these times (one for each row). useful for computing quantities like
+"X months before interview", where interview happened at different times
+for different respondents}
 
 \item{weights}{the weight to apply to occurrences and exposures; defaults to 1}
 
-\item{exp.scale}{TODO}
-
-\item{formula}{a formula whose LHS is var that has the timing of events
-and whose RHS is covariatess (if any)}
-
-\item{doi}{if not NULL, the date of the interview for each row. in this case,
-the intervals are treated as years before the interview, so that the
-actual time period is potentially different for each row. (see the
-\code{intervals} argument, above)}
-
-\item{na.action}{what action to take on missing values; defaults to \code{na.pass}}
-
-\item{unique.exp}{tells which variable identifies unique units for computing exposure.
-so, if the data is multiple records for units that experienced
-multiple events, this allows us to avoid overcounting exposure}
+\item{exp.scale}{amount by which to scale exposure; if, for example, dates are measured
+in months, but you want to measure rates in years, then this should
+be 1/12. It defaults to 1}
 }
 \value{
-a list containing
-\describe{
-   \item{occ.exp}{an array of occurrences and exposures}
-   \item{time.periods}{the time intervals}
-   \item{age.groups}{the ages}
-   \item{exp.scale}{the amount by which exposure is scaled}
-}
+a data frame with the covariates, age groups, occurences and expsoures
 }
 \description{
 Given a variable indicating when an event happened,
@@ -58,28 +54,31 @@ exposures in the given time interval.\cr
 Note that you have to be careful about observations that
 don't experience an event, but still count for exposure;
 see the example below.
-Also note that the current version can only handle
-age intervals of equal width and time intervals of
-equal width. (That is, the age and time intervals do
-not have to be the same as each other, but all of the
-age groups have to have one width and all of the time
-groups have to have another width.)
 }
 \details{
 TODO
 \itemize{
+   \item write unit tests
+   \item fill an example in the documentation below
+   \item id.var is not implemented; might be better to directly handle
+         multiple events (see below)
+   \item handle multiple time periods
+   \item handle multiple events
+   \item handle GK weights (possibly not in this function)
+   \item possibly refactor in the future to pass in dataset of lifelines
+         and separate list of event dates
    \item what if event date is missing?
    \item what about things that vary with the event, eg mother's
                  age when child was born?
-   \item sometimes, the order of the indices in the array isn't logical;
-                 eg, for a variable with levels {1,2,3,6,9}, the results might be
-                 ordered (2,1,6,3,9).
-   \item make this capable of handling different dates than
-        just CMC codes...
+   \item better description of dates; this was developed using CMC codes
+         from the DHS surveys, but it should work for any interval scale
 }
 }
 \examples{
-## RECODE so that observations w/ no births show up
+## THESE EXAMPLES ARE NOT UPDATED!
+  ## Please disregard for the time being...
+
+  ## RECODE so that observations w/ no births show up
   ## in the dataset at least once by giving them a first
   ## birth at the (impossible) CMC code of -1. This ensures
   ## that they never contribute a birth, but that they

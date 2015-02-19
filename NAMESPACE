@@ -2,7 +2,6 @@
 
 S3method(compute,occ.exp)
 S3method(exp,in.interval)
-export(OLD.compute.occ.exp)
 export(attributes.to.long)
 export(cmc.decode)
 export(harmonize.levels)
