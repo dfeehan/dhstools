@@ -8,8 +8,10 @@
 using namespace Rcpp;
 
 //'
+//' @title
 //' window_intersect
 //'
+//' @description
 //' given two intervals, figure out the intersection between the
 //' first and the second
 //'
@@ -24,6 +26,8 @@ using namespace Rcpp;
 //' @return a window containing the exposure and events from a that takes place
 //'         during the time given by b; also, if a has an event and it takes
 //'         place during b, it is included
+//'
+//' @details TODO - should write a more detailed description
 //'
 //'
 // [[Rcpp::export]]
@@ -50,24 +54,28 @@ NumericVector window_intersect(NumericVector a, NumericVector b)
 
 }
 
-/*
- * cpp_compute_occ_exp
- *
- * compute occurrences and exposures from lifelines,
- * age groups, and time intervals
- *
- * @param lambda a matrix of lifelines whose rows are units of observation (individuals),
- *        and whose columns are (in order): start time, end time, event time
- * @param alpha a matrix whose rows are age groups and whose columns are
- *        (in order): start time, end time (both starting from 0)
- * @param alpha_offset a vector with the birthdate of each unit of observation or,
- *        more generally, the offset to use for the age groups in alpha
- * @param tau a matrix of time periods whose rows are units of observation (individuals),
- *        and whose columns are (in order): start time, end time
- * @return a matrix with one row for each unit of observation (individua) whose
- *        columns are (in order): age group 1 exposure, ..., last age group exposure,
- *        age group 1 number of events, ..., last age group number of events
- */
+//'
+//' @title
+//' cpp_compute_occ_exp
+//'
+//' @description
+//' compute occurrences and exposures from lifelines,
+//' age groups, and time intervals
+//'
+//' @param lambda a matrix of lifelines whose rows are units of observation (individuals),
+//'        and whose columns are (in order): start time, end time, event time
+//' @param alpha a matrix whose rows are age groups and whose columns are
+//'        (in order): start time, end time (both starting from 0)
+//' @param alpha_offset a vector with the birthdate of each unit of observation or,
+//'        more generally, the offset to use for the age groups in alpha
+//' @param tau a matrix of time periods whose rows are units of observation (individuals),
+//'        and whose columns are (in order): start time, end time
+//' @return a matrix with one row for each unit of observation (individua) whose
+//'        columns are (in order): age group 1 exposure, ..., last age group exposure,
+//'        age group 1 number of events, ..., last age group number of events
+//'
+//' @details TODO - should write a more detailed description
+//'
 // [[Rcpp::export]]
 List cpp_compute_occ_exp(NumericMatrix lambda,
                                   NumericMatrix alpha,
