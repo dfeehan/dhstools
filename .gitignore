@@ -3,8 +3,9 @@
 
 .RData
 
-# dev-driver is an r script used to test developing new fns
-dev-driver.r
+# files ending in -dev.r are used for developing / testing new code
+# and don't need to end up in repo
+*-dev.r
 
 # taken from https://github.com/hadley/devtools/blob/master/.gitignore
 .R*
