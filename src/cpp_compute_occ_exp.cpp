@@ -1,11 +1,9 @@
-
-
 #include <Rcpp.h>
+using namespace Rcpp;
 
 #define NO_OVERLAP 0.0
 #define NO_EVENT -1.0
 
-using namespace Rcpp;
 
 //'
 //' @title
@@ -124,3 +122,4 @@ List cpp_compute_occ_exp(NumericMatrix lambda,
                         _["exp"] = results_exp));
 
 }
+
