@@ -3,6 +3,9 @@
 
 .RData
 
+# dev-driver is an r script used to test developing new fns
+dev-driver.r
+
 # taken from https://github.com/hadley/devtools/blob/master/.gitignore
 .R*
 *.so
