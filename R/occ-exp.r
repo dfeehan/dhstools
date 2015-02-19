@@ -6,6 +6,40 @@
 ############################################################
 
 ############################################################
+##' make labels for age groups
+##'
+##' helper function; see make.even.age.groups for more
+##' 
+##' @param min.age the first age
+##' @param max.age the highest age
+##' @param width the width of each group 
+##' @return see make.age.groups
+agenames <- function(aw, min.age, max.age) {
+
+  vals.lhs <- seq(from=min.age, to=(max.age-aw), by=aw)
+  vals.rhs <- seq(from=(min.age+aw), to=max.age, by=aw)  
+  return(str_c('[', vals.lhs, '-', vals.rhs, ')'))
+}
+
+############################################################
+##' make an age.groups object with evenly-sized intervals
+##'
+##' see make.age.groups for more
+##' 
+##' @param min.age the first age
+##' @param max.age the highest age
+##' @param width the width of each group 
+##' @return see make.age.groups
+##' @export
+make.even.age.groups <- function(min.age, max.age, width) {
+  widths <- rep(width*12, ((max.age-min.age)/width))
+  names <- agenames(width, min.age, max.age)
+  return(make.age.groups(start=min.age*12,
+                         widths=widths,
+                         names=names))
+}
+
+############################################################
 ##' make an age.groups object
 ##'
 ##' TODO -- would be nice if this could take either widths
