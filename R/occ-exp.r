@@ -206,6 +206,7 @@ exp.in.interval <- function(exp.start,
 ##' \itemize{
 ##'    \item write unit tests
 ##'    \item fill an example in the documentation below
+##'    \item at start of code, handle defaults more elegantly
 ##'    \item id.var is not implemented; might be better to directly handle
 ##'          multiple events (see below)
 ##'    \item handle multiple time periods
@@ -300,6 +301,9 @@ compute.occ.exp <- function(data,
                             exp.scale=1)
 {
 
+
+    ## TODO - I think the next several blocks (handling defaults)
+    ## could be improved 
 
     if (is.null(id.var)) {
         data$.id <- 1:nrow(data)
