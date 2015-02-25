@@ -5,8 +5,7 @@
 \title{attributes.to.long}
 \usage{
 attributes.to.long(data, attribute.prefix, ego.vars = NULL, keep.na = FALSE,
-  idvar = NULL, regexp = "^(.+)([\\\\.|_])(\\\\d+$)", regexp.index.gp = 3,
-  regexp.vname.gp = 1)
+  idvar = NULL, sep = "\\\\.|_", varname.first = TRUE)
 }
 \arguments{
 \item{data}{the wide-form dataset to convert}
@@ -38,21 +37,11 @@ all NAs}
 respondent id. if NULL, then new ids which correspond to the rows
 in data are created.}
 
-\item{regexp}{the regular expression which describes the wide-form variable names
-the default is anything that ends in a "." or a "_" and a number.
-if you specify your own regular expression, it should use groups
-(specified with "(" and ")"). the default is
-\code{"^(.+)([\\.|_])(\\d+$)"}, which specifies three groups
-(see below for how these groups are used).}
+\item{sep}{a regular expression that the wide-form variable names are split
+around. (eg, for "var_01", sep="_"; for "var.01" is is "\\.")}
 
-\item{regexp.index.gp}{the group(s) in regexp which should match the
-wide-form variable name prefixes specified in
-\code{attribute.prefix}. in the default,
-this is the first group, so \code{regexp.index.gp=1}.}
-
-\item{regexp.vname.gp}{the group(s) in regexp which should vary over
-              the different alters; in the default, this is the third group,
-              so \code{regexp.vname.gp=3}.}
+\item{varname.first}{TRUE if the text before the separator is the variable name
+       (eg var_01), and FALSE otherwise}
 }
 \value{
 a long-form dataframe with the attributes reported for all of the alters.
