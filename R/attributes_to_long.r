@@ -66,20 +66,10 @@
 ##' @param idvar the index or name of the variable in the data that has the
 ##'              respondent id. if NULL, then new ids which correspond to the rows
 ##'              in data are created.
-##' @param regexp the regular expression which describes the wide-form variable names
-##'               the default is anything that ends in a "." or a "_" and a number.
-##'               if you specify your own regular expression, it should use groups
-##'               (specified with "(" and ")"). the default is
-##'               \code{"^(.+)([\\.|_])(\\d+$)"}, which specifies three groups
-##'               (see below for how these groups are used).
-##' @param regexp.index.gp the group(s) in regexp which should match the
-##'               wide-form variable name prefixes specified in
-##'               \code{attribute.prefix}. in the default, 
-##'               this is the first group, so \code{regexp.index.gp=1}.
-##' @param regexp.vname.gp the group(s) in regexp which should vary over
-##'               the different alters; in the default, this is the third group,
-##'               so \code{regexp.vname.gp=3}.
-##'               
+##' @param sep a regular expression that the wide-form variable names are split
+##'        around. (eg, for "var_01", sep="_"; for "var.01" is is "\\.")
+##' @param varname.first TRUE if the text before the separator is the variable name
+##'        (eg var_01), and FALSE otherwise
 ##'               
 ##' @return a long-form dataframe with the attributes reported for all of the alters.
 ##'         the dataframe will include an alter.id variable which is formed using
@@ -93,47 +83,42 @@ attributes.to.long <- function(data,
                                ego.vars=NULL,
                                keep.na=FALSE,
                                idvar=NULL,
-                               regexp="^(.+)([\\.|_])(\\d+$)",
-                               regexp.index.gp=3,
-                               regexp.vname.gp=1)
+                               sep="\\.|_",
+                               varname.first=TRUE)
 {
 
-  ## step 1: grab the names of the variables for each attribute
-  attnames <- alply(attribute.prefix,
-                    1,
-                    function(pre) {
-                      cn <- colnames(data)
-                      this.idx <- str_match(cn,
-                                            regexp)
-                      this.idx <- as.data.frame(this.idx,stringsAsFactors=FALSE)
+  if (is.null(idvar)) {
+      data$.id <- 1:nrow(data)
+  } else {
+      data$.id <- data[,idvar]
+  }
+  internal.idvar <- ".id"
 
-                      ## now need to take results matrix and figure out how to get
-                      ## indices of the pre variables from it...
-                      this.idx$is.match <- ! is.na(this.idx[,1])
-                      this.idx$index <- 1:nrow(this.idx)
-                      this.idx$cname <- cn
+  if (is.null(names(attribute.prefix))) {
+      names(attribute.prefix) <- attribute.prefix
+  }
 
-                      this.idx$vname <- apply(this.idx,
-                                              1,
-                                              function(x) {
-                                                res <- paste(x[regexp.vname.gp+1],
-                                                             collapse="")
-                                                return(res)
-                                              })
+  ## grab the columns that have variables related to the attributes
+  cn <- colnames(data)
+  regexp <- paste0("^(",
+                   paste0(attribute.prefix, collapse="|"),
+                   ")(", 
+                   sep, ")(.+)")
 
-                      res.idx <- subset(this.idx,
-                                        vname==pre)$cname
+  varmat <- as.data.frame(str_match(cn, regexp), stringsAsFactors=FALSE)
+  varmat <- varmat[! is.na(varmat[,1]),]
 
-                      ## if we can't find one of the attributes in the dataset,
-                      ## then return an error
-                      if (is.null(res.idx) | length(res.idx)==0) {
-                        stop("Can't find attribute ",
-                             pre,
-                             " in the column names of the dataset.\n")
-                      }
+  if (varname.first) {
+    colnames(varmat) <- c('column', 'variable', 'sep', 'alternum')
+  } else {
+    colnames(varmat) <- c('column', 'alternum', 'sep', 'variable')
+  }
 
-                      return(res.idx)
-                    })
+  avmap <- data.frame('newname'=names(attribute.prefix), 
+                      'variable'=attribute.prefix)
+
+  varmat <- join(varmat, avmap,
+                 by='variable')
 
   ## grab the idvar, if we were given one; otherwise,
   ## create one
@@ -148,164 +133,60 @@ attributes.to.long <- function(data,
     stop("id does not appear to be unique.\n")
   }
 
-  l_ply(unlist(attnames),
-        function(this.attname) {
-          if (is.factor(data[,this.attname])) {
-            cat("converting ", this.attname, "from factor to numeric.\n")
-            data[,this.attname] <<- as.numeric(data[,this.attname])
-          }
-        })
+  ## for each alter num
+  ##   - grab appropriate vars
+  ##   - remove empty rows (if so ordered)
 
-  adata <- llply(attnames,
-                 function(these.attnames) {
+  alternums <- unique(varmat$alternum)
 
-                   ## grab the wide-form data for this attribute
-                   these.alterdata <- data[,c(ego.vars, these.attnames)]
-                   ## add the id variable
-                   these.alterdata$id <- alterdata$id
+  res <- ldply(alternums,
+                 function(this.alternum) {
 
-                   ## reshape long
-                   tmp <- melt(these.alterdata,
-                               id.vars=c("id",ego.vars))
+                   these.cols <- varmat[varmat[,'alternum']==this.alternum,]
 
-                   thesepat <- str_match(tmp$variable,
-                                         regexp)
-                   tmp$variable <- apply(thesepat,
-                                         1,
-                                         function(x) {
-                                           res <- paste(x[regexp.vname.gp+1],
-                                                        collapse="")
-                                           return(res)
-                                         })                   
-                   tmp$alternum <- apply(thesepat,
-                                         1,
-                                         function(x) {
-                                           res <- paste(x[regexp.index.gp+1],
-                                                        collapse="")
-                                           return(res)
-                                         })                                      
+                   these.altercols <- these.cols[,'column']
+                   names(these.altercols) <- paste(these.cols[,'newname'])
 
-                   ## NOTE:
-                   ## if variable is not numeric,
-                   ## as it is not in the application i'm working with now,
-                   ## then this causes an error. figure out how to fix this...
+                   tograb <- c('.id'='.id',
+                               ego.vars, 
+                               these.altercols)
 
-                   tmp2 <- dcast(tmp,
-                                 ... ~ variable)
+                   these.alterdata <- select_(data, .dots=tograb)
+
+                   if (! keep.na) {
+
+                      ## this is tricky because we need to convert the usual
+                      ## non-standard evaluation function calls to use
+                      ## the standard evaluation version
+
+                      ## for each row, we'll count the number of alter columns
+                      ## that have missing values
+                      ## and we'll filter out rows where that number is all of them
+                      filter.cond <- paste(paste0("as.numeric(is.na(",
+                                                       names(these.altercols), 
+                                                       "))", collapse="+"))
+                      numvar <- length(these.altercols)
+                      
+                      these.alterdata <- mutate_(these.alterdata,
+                                                 .misscount=interp(filter.cond))
+                      
+                      these.alterdata <- filter_(these.alterdata,
+                                                 .dots=interp(~ .misscount < numvar))
+
+                      these.alterdata <- select_(these.alterdata,
+                                                 .dots=interp(~ -.misscount))
 
 
-                   tmp2$alter.id <- paste(tmp2$id, ".", tmp2$alternum, sep="")
-                   
-                   tmp2 <- subset(tmp2, select=-c(id,alternum))
+                   }
 
-                   return(tmp2[order(tmp2$alter.id),])
+                   return(these.alterdata)
                    
                  })
 
-  ## ensure that the ids are all in the same order, so that
-  ## we can just cbind the data.frames from each attribute together
-  ## TODO -- should add option to perform this check, even though
-  ##         it is costly...
-  if(1==0) {
-  check <- laply(adata,
-                 function(x) {
-                   return(x$alter.id)
-                 })
-  check <- t(check)
-
-  checkres <- aaply(check,
-                    1,
-                    function(x) {
-                      return(length(unique(x))==1)
-                    })
-  
-  ## now we have a list of dataframes, one for each attribute,
-  ## with id variable id.alternum
-  ## we'll merge these all into one dataset...
-  if(! all(checkres==TRUE)) {
-    ## (this should never happen)
-    stop("alignment error in reassembling long-form attribute dataset.\n")
-  }
-  }
-
-  ## get the alter.id values (they will be in the same order
-  ## for all of the datasets)
-  att.ids <- adata[[1]]$alter.id
-  
-  ## if we're keeping any ego vars, grab them too
-  ego.var.dat <- adata[[1]][,ego.vars]
-
-  ## remove the id value from each dataset, so that we
-  ## don't have it duplicated
-
-  adata <- llply(adata,
-                 function(x) {
-                   tolose <- match(c("alter.id", ego.vars),colnames(x))
-                   x <- subset(x,select=-tolose)
-                   ##x <- subset(x,select=-alter.id)                   
-                   return(x)
-                 })
-
-  ## column-bind the datasets together
-  att.data <- do.call("cbind", adata)
-
-  ## if we're renaming the attributes of the
-  ## alters, then do so now
-  if (! is.null(names(attribute.prefix))) {
-    toren <- names(attribute.prefix)
-    names(toren) <- paste(attribute.prefix)
-    att.data <- rename(att.data,
-                       toren)
-                       
-  }
-  
-  ## ... and replace the alter.id values
-  att.data$alter.id <- att.ids
-
-  ## and add the ego vars to our final dataset
-  att.data[,ego.vars] <- ego.var.dat
-
-  ## if we're renaming the ego variables,
-  ## do so now
-  if(! is.null(names(ego.vars))) {
-    toren <- names(ego.vars)
-    names(toren) <- paste(ego.vars)
-    att.data <- rename(att.data,
-                       toren)
-  }
-
-  ## if we are to remove columns that are all NAs, do so now
-  if (! keep.na) {
-
-    ### TODO -- LEFT OFF HERE:
-    ### THIS IS WHERE WE NEED TO CHANGE - now that there are
-    ### ego vars, they are also in att.data; we want to lost rows
-    ### that have all of the attribute columns missing...
-
-    if (! is.null(names(attribute.prefix))) {
-      avars <- names(attribute.prefix)
-    } else {
-      avars <- attribute.prefix
-    }
-
-    attidx <- which(colnames(att.data) %in% avars)
-
-    tolose <- ddply(att.data,
-                    .(alter.id),
-                    function(x) {
-                      return(data.frame(tolose=all(is.na(x[attidx]))))
-                    })
-
-    att.data <- merge(att.data,
-                      tolose,
-                      by="alter.id",
-                      all=TRUE)
-    att.data <- subset(att.data,
-                       ! tolose,
-                       select=-tolose)
-                   
-  }
-  
-  return(att.data)
+  return(res)
 
 }
+
+
+
+
