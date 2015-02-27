@@ -10,16 +10,11 @@ Depends:
     Rcpp (>= 0.11.3)
 Imports:
     plyr,
-    reshape2,
+    dplyr,
+    tidyr,
+    stringr,
+    lazyeval,
     functional,
     Rcpp
 LinkingTo: Rcpp
 License: MIT
-Collate:
-    'dhstools.r'
-    'occ-exp.r'
-    'read-files.r'
-    'remap-variables.r'
-    'helper-functions.r'
-    'attributes_to_long.r'
-    'cmc.r'
