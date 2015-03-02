@@ -18,7 +18,7 @@ agenames <- function(aw, min.age, max.age) {
 
   vals.lhs <- seq(from=min.age, to=(max.age-aw), by=aw)
   vals.rhs <- seq(from=(min.age+aw), to=max.age, by=aw)  
-  return(str_c('[', vals.lhs, '-', vals.rhs, ')'))
+  return(str_c('[', vals.lhs, ',', vals.rhs, ')'))
 }
 
 ############################################################
