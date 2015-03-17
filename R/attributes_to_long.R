@@ -27,21 +27,25 @@
 ##' }
 ##' (Note that we make no guarantees about the order in which the reshaped data
 ##' will be returned.)\cr
+##'
+##' @section TODO:
 ##' \itemize{
-##'   \item{TODO - }{for now, this converts any factors into characters.
-##'                  this is obviously not ideal. eventually, data type should be
-##'                  preserved...}
-##'   \item{TODO - }{handle the case of "" more effectively. Right now, we
-##'                  *assume* that all structural missings
-##'                  (eg, I only report one alter,
-##'                  though there are three columns for me to do so) are NA}
-##'   \item{TODO - }{look at the code in the middle of the function that's
-##'                  commented out and be sure we know that the order of
-##'                  the rows will be the same, to that we can cbind them
-##'                  together.}
+##'   \item{should follow the se / nse pattern in, eg, the kp functions;
+##'         interim workaround -- eg as.data.frame(df)[,idvar] -- for now}
+##'   \item{for now, this converts any factors into characters.
+##'         this is obviously not ideal. eventually, data type should be
+##'         preserved...}
+##'   \item{handle the case of "" more effectively. Right now, we
+##'         *assume* that all structural missings
+##'         (eg, I only report one alter,
+##'         though there are three columns for me to do so) are NA}
+##'   \item{look at the code in the middle of the function that's
+##'         commented out and be sure we know that the order of
+##'         the rows will be the same, to that we can cbind them
+##'         together.}
 ##' }
 ##' 
-##' @param data the wide-form dataset to convert
+##' @param df the wide-form dataset to convert
 ##' @param attribute.prefix a vector whose entries have the prefixes of the
 ##'                         names of variables
 ##'                         in the dataframe \code{data} that pertain to each
@@ -78,7 +82,7 @@
 ##' @examples \dontrun{
 ##'    ## TODO add example
 ##' }
-attributes.to.long <- function(data,
+attributes.to.long <- function(df,
                                attribute.prefix,
                                ego.vars=NULL,
                                keep.na=FALSE,
@@ -88,18 +92,21 @@ attributes.to.long <- function(data,
 {
 
   if (is.null(idvar)) {
-      data$.id <- 1:nrow(data)
+      df$.tmpid <- 1:nrow(df)
   } else {
-      data$.id <- data[,idvar]
+      ## this is kind of a hack, but if we don't coerce df to
+      ## be a data frame, then this breaks because accessing
+      ## a tbl_df via [] never produces a vector (like drop=FALSE always)
+      df$.tmpid <- as.data.frame(df)[,idvar]
   }
-  internal.idvar <- ".id"
+  internal.idvar <- ".tmpid"
 
   if (is.null(names(attribute.prefix))) {
       names(attribute.prefix) <- attribute.prefix
   }
 
   ## grab the columns that have variables related to the attributes
-  cn <- colnames(data)
+  cn <- colnames(df)
   regexp <- paste0("^(",
                    paste0(attribute.prefix, collapse="|"),
                    ")(", 
@@ -123,9 +130,9 @@ attributes.to.long <- function(data,
   ## grab the idvar, if we were given one; otherwise,
   ## create one
   if(! is.null(idvar)) {
-    alterdata <- data.frame(id=data[,idvar])
+    alterdata <- data.frame(id=as.data.frame(df)[,idvar])
   } else {
-    alterdata <- data.frame(id=1:nrow(data))
+    alterdata <- data.frame(id=1:nrow(df))
   }
 
   ## check that the ids passed in are unique...
@@ -147,11 +154,11 @@ attributes.to.long <- function(data,
                    these.altercols <- these.cols[,'column']
                    names(these.altercols) <- paste(these.cols[,'newname'])
 
-                   tograb <- c('.id'='.id',
+                   tograb <- c('.tmpid'='.tmpid',
                                ego.vars, 
                                these.altercols)
 
-                   these.alterdata <- select_(data, .dots=tograb)
+                   these.alterdata <- select_(df, .dots=tograb)
 
                    if (! keep.na) {
 
