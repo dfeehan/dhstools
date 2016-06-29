@@ -194,9 +194,11 @@ make.time.periods <- function(start, durations, names) {
 ##'        that contribute exposure but no events should have this set to a value that
 ##'        will never occur in the time period; for example, -1
 ##' @param age.groups an age.groups object
-##' @param age.offsets if not NULL, then the age.periods are to be interpreted relative to ##'        these times (one for each row). this is usually a birth date
+##' @param age.offsets if not NULL, then the age.periods are to be interpreted relative to 
+##'        these times (one for each row). this is usually a birth date
 ##' @param time.periods a time.periods object
-##' @param time.offsets if not NULL, then the time.periods are to be interpreted relative to ##'        these times (one for each row). useful for computing quantities like 
+##' @param time.offsets if not NULL, then the time.periods are to be interpreted relative to 
+##'        these times (one for each row). useful for computing quantities like 
 ##'        "X months before interview", where interview happened at different times 
 ##'        for different respondents
 ##' @param id.var the variable giving the unique rows of the dataset for each
@@ -273,48 +275,62 @@ occ.exp <- function(data,
     lifeline.mat <- as.matrix(full.dat %>% select(1:3))
     colnames(lifeline.mat) <- c("start.obs", "end.obs", "event")
 
-    this.time.period <- matrix(time.periods$template,
-                               nrow=nrow(lifeline.mat),
-                               ncol=2,
-                               byrow=TRUE)
-    this.time.period <- this.time.period + select_(full.dat, .dots=time.offsets)[,1]
-
-    this.age.groups <- age.groups$template
-
-    this.age.offset <- select_(full.dat, .dots=start.obs)[,1]
-
-    raw.res <- cpp_compute_occ_exp(lifeline.mat,
-                                   this.age.groups,
-                                   this.age.offset,
-                                   this.time.period)
-
+    ## helper fn used below
     weighted.sum <- function(x, w) {
         return(sum(x*w))
     }
 
-    ## summarize each qty (occ and exp) separately; then combine them
-    agg.qty <- ldply(c('occ', 'exp'),
-                     function(this.qty) {
+    uber.res <- ldply(1:time.periods$num.groups,
+                      function(time.idx) {
 
-                        res.qty <- as.data.frame(raw.res[[this.qty]])
-                        colnames(res.qty) <- paste0("agegroup_", 1:ncol(res.qty))
+        this.time.period <- matrix(time.periods$template[time.idx,],
+                                   nrow=nrow(lifeline.mat),
+                                   ncol=2,
+                                   byrow=TRUE)
 
-                        # note that this assumes the order of the rows hasn't changed
-                        res.qty <- cbind(full.dat, res.qty)
 
-                        res.qty.agg <- res.qty %>% group_by_(.dots=gpvars) %>%
-                                       summarise_each(funs(weighted.sum(., .weight)),
-                                                      starts_with("agegroup"))
+        this.time.period <- this.time.period + select_(full.dat, .dots=time.offsets)[,1]
 
-                        res.qty.agg <- res.qty.agg %>% 
-                                       gather(agegroup, value, starts_with("agegroup")) %>%
-                                       mutate(qty=this.qty)
+        this.age.groups <- age.groups$template
 
-                        return(res.qty.agg)
+        this.age.offset <- select_(full.dat, .dots=start.obs)[,1]
 
-                     })
 
-    agg.res <- spread(agg.qty, qty, value)
+        raw.res <- cpp_compute_occ_exp(lifeline.mat,
+                                       this.age.groups,
+                                       this.age.offset,
+                                       this.time.period)
+
+
+        ## summarize each qty (occ and exp) separately; then combine them
+        agg.qty <- ldply(c('occ', 'exp'),
+                         function(this.qty) {
+
+                            res.qty <- as.data.frame(raw.res[[this.qty]])
+                            colnames(res.qty) <- paste0("agegroup_", 1:ncol(res.qty))
+
+                            # note that this assumes the order of the rows hasn't changed
+                            res.qty <- cbind(full.dat, res.qty)
+
+                            res.qty.agg <- res.qty %>% group_by_(.dots=gpvars) %>%
+                                           summarise_each(funs(weighted.sum(., .weight)),
+                                                          starts_with("agegroup"))
+
+                            res.qty.agg <- res.qty.agg %>% 
+                                           gather(agegroup, value, starts_with("agegroup")) %>%
+                                           mutate(qty=this.qty)
+
+                            return(res.qty.agg)
+
+                         })
+
+        agg.qty$time.period <- time.periods$names[[time.idx]]
+
+        return(agg.qty)
+
+    })
+
+    agg.res <- spread(uber.res, qty, value)
 
     ## rename the age group to match the definitions
     agename.remap <- data.frame(agegroup=paste0("agegroup_", 1:length(age.groups$names)),

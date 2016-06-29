@@ -44,9 +44,11 @@ window_intersect <- function(a, b) {
 #'        more generally, the offset to use for the age groups in alpha
 #' @param tau a matrix of time periods whose rows are units of observation (individuals),
 #'        and whose columns are (in order): start time, end time
-#' @return a matrix with one row for each unit of observation (individua) whose
-#'        columns are (in order): age group 1 exposure, ..., last age group exposure,
-#'        age group 1 number of events, ..., last age group number of events
+#' @return a list containing two matrices, 'occ' and 'exp. each
+#'         matrix has one row for each unit of observation (individua) whose
+#'         columns are (for exp, in order): age group 1 exposure, ...,
+#'         last age group exposure; and (for occ, in order)
+#'         age group 1 number of events, ..., last age group number of events
 #'
 #' @details TODO - should write a more detailed description
 #'
