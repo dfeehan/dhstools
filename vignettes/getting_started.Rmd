@@ -1,0 +1,23 @@
+Getting started with the **dhstools** package
+=============================================
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{getting started}
+-->
+
+Installation
+------------
+For the time being, the **dhstools** package is not available on CRAN. Instead, you can download the code from [github](http://www.github.com/dfeehan). The easiest way to do so is to use the **devtools** package:
+
+```{r}
+## TODO - don't run
+## require(devtools)
+## install_github('dhstools', 'dfeehan')
+```
+
+Overview
+--------
+
+The **dhstools** package is under development. Eventually, it will provide a set of functions that will be useful to analysts who wish to use Demographic and Health Surveys data. (TODO link...)
+
+
