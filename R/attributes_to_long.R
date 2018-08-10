@@ -153,12 +153,13 @@ attributes.to.long <- function(df,
 
                    these.altercols <- these.cols[,'column']
                    names(these.altercols) <- paste(these.cols[,'newname'])
-
+                   
                    tograb <- c('.tmpid'='.tmpid',
                                ego.vars, 
                                these.altercols)
 
-                   these.alterdata <- select_(df, .dots=tograb)
+                   these.alterdata <- select_(df, .dots=tograb) %>%
+                     mutate(alternum = this.alternum)
 
                    if (! keep.na) {
 
